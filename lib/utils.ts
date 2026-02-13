@@ -28,3 +28,12 @@ export function isDeadlineDepassee(deadline: string): boolean {
   d.setHours(0, 0, 0, 0);
   return d.getTime() < today.getTime();
 }
+
+/** Jours restants (positif) ou jours de retard (négatif). */
+export function joursRestants(deadline: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(deadline);
+  d.setHours(0, 0, 0, 0);
+  return Math.round((d.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+}

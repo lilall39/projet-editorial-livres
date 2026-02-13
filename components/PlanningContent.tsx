@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/useProject";
 import { RappelsBandeau } from "@/components/RappelsBandeau";
 import { SectionCard } from "@/components/SectionCard";
 import { FicheDetail } from "@/components/FicheDetail";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { getEtapeById } from "@/lib/data";
+import type { ProjetEditorial } from "@/types";
 
 export function PlanningContent() {
   const searchParams = useSearchParams();
@@ -19,11 +21,13 @@ export function PlanningContent() {
     updateSousTache,
     resetEtape,
     resetProjet,
+    replaceProjet,
     revenirPlanningAuto,
     marquerFait,
     setDateLancement,
   } = useProject();
   const [etapeOuverte, setEtapeOuverte] = useState<string | null>(null);
+  const inputImportRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const etapeFromUrl = searchParams.get("etape");
@@ -45,6 +49,50 @@ export function PlanningContent() {
     fermerFiche();
   }, [fermerFiche, resetProjet]);
 
+  const handleExport = useCallback(() => {
+    if (!projet) return;
+    const blob = new Blob([JSON.stringify(projet, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `projet-editorial-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [projet]);
+
+  const handleImport = useCallback(() => {
+    inputImportRef.current?.click();
+  }, []);
+
+  const onImportFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file || !replaceProjet) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result as string) as ProjetEditorial;
+          if (!data || !Array.isArray(data.etapes) || data.etapes.length === 0) {
+            alert("Fichier invalide : structure de projet attendue.");
+            return;
+          }
+          if (
+            !window.confirm(
+              "Remplacer l’état actuel du projet par ce fichier ? Les données actuelles seront perdues."
+            )
+          )
+            return;
+          replaceProjet({ ...data, derniereModif: new Date().toISOString() });
+        } catch {
+          alert("Fichier JSON invalide.");
+        }
+      };
+      reader.readAsText(file);
+    },
+    [replaceProjet]
+  );
+
   if (!projet) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-fond">
@@ -57,11 +105,21 @@ export function PlanningContent() {
     ? getEtapeById(projet.etapes, etapeOuverte)
     : null;
 
+  const hasEtapes = Array.isArray(projet.etapes) && projet.etapes.length > 0;
+
   return (
     <div className="min-h-screen bg-fond">
+      <input
+        ref={inputImportRef}
+        type="file"
+        accept=".json,application/json"
+        className="hidden"
+        onChange={onImportFile}
+      />
       <header className="border-b border-principal/20 bg-white shadow-sm">
         <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+          <Breadcrumb items={[{ label: "Planning" }]} />
+          <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <h1 className="text-xl font-bold text-principal sm:text-2xl">
                 {projet.nom}
@@ -86,18 +144,39 @@ export function PlanningContent() {
                 )}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleResetProjet}
-              className="min-h-[44px] shrink-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-principal/30 active:bg-gray-100 sm:py-2"
-            >
-              Réinitialiser le projet
-            </button>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleExport}
+                className="min-h-[44px] rounded-lg border border-principal/40 bg-white px-3 py-2 text-sm font-medium text-principal hover:bg-principal/5 focus:outline-none focus:ring-2 focus:ring-principal/30"
+              >
+                Exporter
+              </button>
+              <button
+                type="button"
+                onClick={handleImport}
+                className="min-h-[44px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-principal/30"
+              >
+                Importer
+              </button>
+              <button
+                type="button"
+                onClick={handleResetProjet}
+                className="min-h-[44px] shrink-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-principal/30 active:bg-gray-100 sm:py-2"
+              >
+                Réinitialiser le projet
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+        {!hasEtapes && (
+          <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Données introuvables. Utilisez Importer pour charger une sauvegarde ou Réinitialiser le projet.
+          </p>
+        )}
         {rappels.length > 0 && (
           <section className="mb-8">
             <RappelsBandeau
@@ -112,7 +191,7 @@ export function PlanningContent() {
             Étapes du projet
           </h2>
           <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
-            {projet.etapes.map((etape) => (
+            {hasEtapes && projet.etapes.map((etape) => (
               <SectionCard
                 key={etape.id}
                 etape={etape}

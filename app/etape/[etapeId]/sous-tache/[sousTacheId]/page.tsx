@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useProject } from "@/hooks/useProject";
 import { getEtapeById, getSousTache } from "@/lib/data";
 import { labelStatut } from "@/lib/utils";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { StatutBadge } from "@/components/StatutBadge";
 import type { Statut } from "@/types";
 
 const STATUTS: Statut[] = ["a_faire", "en_cours", "fait"];
@@ -17,6 +19,7 @@ function safeParam(p: string | string[] | undefined): string {
 
 export default function FicheSousTachePage() {
   const params = useParams() ?? {};
+  const router = useRouter();
   const etapeId = safeParam(params.etapeId);
   const sousTacheId = safeParam(params.sousTacheId);
   const { projet, updateSousTacheDetail } = useProject();
@@ -83,10 +86,11 @@ export default function FicheSousTachePage() {
   if (!etapeId || !sousTacheId || !etape || !sousTache) {
     return (
       <div className="min-h-screen bg-fond p-8">
-        <p className="text-gray-500">
+        <Breadcrumb items={[{ label: "Planning", href: "/" }]} />
+        <p className="mt-4 text-gray-500">
           {!etapeId || !sousTacheId
             ? "URL incomplète."
-            : "Fiche introuvable pour cette étape ou sous-tâche."}
+            : "Données introuvables pour cette étape ou sous-tâche."}
         </p>
         <Link href="/" className="mt-4 inline-block text-sm text-principal hover:underline">
           Retour au planning global
@@ -95,25 +99,22 @@ export default function FicheSousTachePage() {
     );
   }
 
+  const handleSauvegarderEtRetour = useCallback(() => {
+    save({ objectifAFaire, ceQuiAFait, responsable, notes });
+    router.push("/");
+  }, [objectifAFaire, ceQuiAFait, responsable, notes, save, router]);
+
   return (
     <div className="min-h-screen bg-fond">
       <header className="border-b border-principal/20 bg-white shadow-sm">
         <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <Link
-              href="/"
-              className="min-h-[44px] flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-principal hover:bg-principal/10 touch-manipulation sm:py-1.5"
-            >
-              Retour au planning global
-            </Link>
-            <span className="hidden text-gray-400 sm:inline">·</span>
-            <Link
-              href={`/?etape=${etapeId}`}
-              className="min-h-[44px] flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-principal hover:bg-principal/10 touch-manipulation sm:py-1.5"
-            >
-              Retour à l&apos;étape : {etape.titre}
-            </Link>
-          </div>
+          <Breadcrumb
+            items={[
+              { label: "Planning", href: "/" },
+              { label: etape.titre, href: `/?etape=${etapeId}` },
+              { label: sousTache.libelle },
+            ]}
+          />
           <h1 className="mt-3 text-lg font-bold text-principal min-w-0 break-words sm:text-xl">
             {sousTache.libelle}
           </h1>
@@ -122,43 +123,38 @@ export default function FicheSousTachePage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="space-y-5 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:space-y-6 sm:p-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Objectif / à faire
-            </label>
+        <div className="space-y-6">
+          <section className="rounded-2xl border border-principal/20 bg-white p-4 shadow-sm sm:p-6">
+            <h2 className="mb-3 text-sm font-semibold text-principal">Objectif / à faire</h2>
             <textarea
               value={objectifAFaire}
               onChange={(e) => setObjectifAFaire(e.target.value)}
               onBlur={() => save({ objectifAFaire })}
               rows={3}
               placeholder="Décrivez l’objectif ou ce qui est à faire…"
-              className="mt-1 min-h-[88px] w-full rounded-lg border border-gray-200 px-3 py-2 text-base text-gray-900 focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal sm:text-sm"
+              className="mt-1 min-h-[100px] w-full rounded-lg border border-gray-200 px-3 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal sm:text-sm"
             />
-          </div>
+          </section>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Ce qui a été fait
-            </label>
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+            <h2 className="mb-3 text-sm font-semibold text-gray-700">Ce qui a été fait</h2>
             <textarea
               value={ceQuiAFait}
               onChange={(e) => setCeQuiAFait(e.target.value)}
               onBlur={() => save({ ceQuiAFait })}
               rows={3}
               placeholder="Résumé de ce qui a été réalisé…"
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal"
+              className="mt-1 min-h-[100px] w-full rounded-lg border border-gray-200 px-3 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal sm:text-sm"
             />
-          </div>
+          </section>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Statut
-            </label>
+          <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6 space-y-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="block text-sm font-medium text-gray-700 shrink-0">Statut</label>
             <select
               value={sousTache.statut}
               onChange={(e) => save({ statut: e.target.value as Statut })}
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal"
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal"
             >
               {STATUTS.map((s) => (
                 <option key={s} value={s}>
@@ -166,6 +162,7 @@ export default function FicheSousTachePage() {
                 </option>
               ))}
             </select>
+            <StatutBadge statut={sousTache.statut} />
           </div>
 
           <div>
@@ -189,7 +186,7 @@ export default function FicheSousTachePage() {
               value={responsable}
               onChange={(e) => setResponsable(e.target.value)}
               onBlur={() => save({ responsable: responsable || undefined })}
-              placeholder="Nom du responsable"
+              placeholder="Ex. Jean Dupont, équipe éditoriale…"
               className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal"
             />
           </div>
@@ -203,14 +200,14 @@ export default function FicheSousTachePage() {
               onChange={(e) => setNotes(e.target.value)}
               onBlur={() => save({ notes: notes || undefined })}
               rows={3}
-              placeholder="Notes libres…"
+              placeholder="Notes, idées, points d’attention…"
               className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Liens
+              Liens utiles
             </label>
             {liens.length > 0 && (
               <ul className="mt-2 space-y-1">
@@ -259,6 +256,20 @@ export default function FicheSousTachePage() {
               </button>
             </div>
           </div>
+
+          <div className="pt-6 mt-6 border-t-2 border-principal/20">
+            <button
+              type="button"
+              onClick={handleSauvegarderEtRetour}
+              className="w-full min-h-[52px] rounded-xl bg-principal px-4 py-3.5 text-base font-bold text-white shadow-md hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-principal focus:ring-offset-2 touch-manipulation"
+            >
+              Sauvegarder & Retour au planning
+            </button>
+            <p className="mt-2 text-center text-xs text-gray-500">
+              Les champs sont aussi enregistrés automatiquement à la sortie de chaque zone.
+            </p>
+          </div>
+          </section>
         </div>
       </main>
     </div>

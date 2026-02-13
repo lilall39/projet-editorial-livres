@@ -164,10 +164,15 @@ export function useProject() {
     [updateEtape]
   );
 
+  const replaceProjet = useCallback((next: ProjetEditorial) => {
+    setProjet(next);
+  }, []);
+
   return {
     projet,
     rappels,
     lastSavedAt,
+    replaceProjet,
     updateEtape,
     updateEtapeDeadline,
     updateEtapeField,

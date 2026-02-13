@@ -1,7 +1,8 @@
 "use client";
 
 import type { Etape } from "@/types";
-import { formatDate, labelStatut, isDeadlineDepassee } from "@/lib/utils";
+import { formatDate, isDeadlineDepassee, joursRestants } from "@/lib/utils";
+import { StatutBadge } from "@/components/StatutBadge";
 
 interface SectionCardProps {
   etape: Etape;
@@ -17,6 +18,7 @@ export function SectionCard({
   onMarquerFait,
 }: SectionCardProps) {
   const enRetard = etape.statut !== "fait" && isDeadlineDepassee(etape.deadline);
+  const j = joursRestants(etape.deadline);
 
   return (
     <div className="w-full min-w-0 rounded-xl border border-gray-200 bg-white shadow-sm transition hover:border-principal/40 hover:shadow-md active:shadow-lg">
@@ -29,27 +31,25 @@ export function SectionCard({
           <h3 className="text-base font-semibold text-principal group-hover:underline sm:text-lg min-w-0 flex-1 pr-2">
             {etape.titre}
           </h3>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              etape.statut === "fait"
-                ? "bg-green-100 text-green-800"
-                : etape.statut === "en_cours"
-                  ? "bg-principal/15 text-principal"
-                  : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            {labelStatut(etape.statut)}
+          <span className="flex items-center gap-2 shrink-0">
+            <span className="text-lg leading-none opacity-70" aria-hidden>
+              {enRetard ? "⛔" : etape.statut === "fait" ? "✔️" : etape.statut === "en_cours" ? "⏳" : "○"}
+            </span>
+            <StatutBadge statut={etape.statut} enRetard={enRetard} compact />
           </span>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-600">
           <span>Échéance : {formatDate(etape.deadline)}</span>
+          <span className={j < 0 ? "font-medium text-alerte" : "text-gray-500"}>
+            {j > 0 ? `J-${j}` : j < 0 ? `J+${Math.abs(j)}` : "J-0"}
+          </span>
           {etape.responsable && (
             <span className="text-gray-500">• {etape.responsable}</span>
           )}
         </div>
         {enRetard && (
-          <p className="mt-2 text-sm font-medium text-alerte">
-            Deadline dépassée
+          <p className="mt-2">
+            <StatutBadge statut={etape.statut} enRetard />
           </p>
         )}
         {etape.sousTaches.length > 0 && (

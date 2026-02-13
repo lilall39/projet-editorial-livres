@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Etape, Statut } from "@/types";
 import { labelStatut, isDeadlineDepassee } from "@/lib/utils";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { StatutBadge } from "@/components/StatutBadge";
 
 interface FicheDetailProps {
   etape: Etape;
@@ -88,8 +90,17 @@ export function FicheDetail({
         className="max-h-[95vh] w-full overflow-y-auto rounded-t-2xl border border-gray-200 bg-white shadow-xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-gray-100 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <h2 id="fiche-titre" className="text-lg font-semibold text-principal sm:text-xl min-w-0 truncate pr-2">{etape.titre}</h2>
+        <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-4 py-4 sm:px-6">
+          <Breadcrumb
+            items={[
+              { label: "Planning", onClick: onClose },
+              { label: etape.titre },
+            ]}
+          />
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 id="fiche-titre" className="text-lg font-semibold text-principal sm:text-xl min-w-0 truncate pr-2">{etape.titre}</h2>
+            <StatutBadge statut={etape.statut} enRetard={enRetard} />
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -135,19 +146,22 @@ export function FicheDetail({
             <label className="block text-sm font-medium text-gray-700">
               Statut de l&apos;étape
             </label>
-            <select
-              value={etape.statut}
-              onChange={(e) =>
-                onUpdate(etape.id, { statut: e.target.value as Statut })
-              }
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal"
-            >
-              {STATUTS.map((s) => (
-                <option key={s} value={s}>
-                  {labelStatut(s)}
-                </option>
-              ))}
-            </select>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <select
+                value={etape.statut}
+                onChange={(e) =>
+                  onUpdate(etape.id, { statut: e.target.value as Statut })
+                }
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-principal focus:outline-none focus:ring-1 focus:ring-principal sm:max-w-[200px]"
+              >
+                {STATUTS.map((s) => (
+                  <option key={s} value={s}>
+                    {labelStatut(s)}
+                  </option>
+                ))}
+              </select>
+              <StatutBadge statut={etape.statut} enRetard={enRetard} />
+            </div>
           </div>
 
           {enRetard && (onRevenirPlanningAuto || onMarquerFait) && (
