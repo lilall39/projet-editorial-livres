@@ -72,6 +72,11 @@ export default function FicheSousTachePage() {
     [etapeId, sousTacheId, liens, updateSousTacheDetail]
   );
 
+  const handleSauvegarderEtRetour = useCallback(() => {
+    save({ objectifAFaire, ceQuiAFait, responsable, notes });
+    router.push("/");
+  }, [objectifAFaire, ceQuiAFait, responsable, notes, save, router]);
+
   if (!projet) {
     return (
       <div className="min-h-screen bg-fond p-8">
@@ -98,11 +103,6 @@ export default function FicheSousTachePage() {
       </div>
     );
   }
-
-  const handleSauvegarderEtRetour = useCallback(() => {
-    save({ objectifAFaire, ceQuiAFait, responsable, notes });
-    router.push("/");
-  }, [objectifAFaire, ceQuiAFait, responsable, notes, save, router]);
 
   return (
     <div className="min-h-screen bg-fond">
