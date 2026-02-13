@@ -52,12 +52,20 @@ export function SectionCard({
             <StatutBadge statut={etape.statut} enRetard />
           </p>
         )}
-        {etape.sousTaches.length > 0 && (
-          <p className="mt-2 text-xs text-gray-500">
-            {etape.sousTaches.filter((s) => s.statut === "fait").length} /{" "}
-            {etape.sousTaches.length} sous-tâches
-          </p>
-        )}
+        {etape.sousTaches.length > 0 && (() => {
+          const faites = etape.sousTaches.filter((s) => s.statut === "fait").length;
+          const total = etape.sousTaches.length;
+          const terminé = faites === total;
+          return (
+            <p className={`mt-2 text-xs ${terminé ? "font-medium text-green-700" : "text-gray-500"}`}>
+              {terminé ? (
+                <>✔️ Terminé – {total}/{total} sous-tâches</>
+              ) : (
+                <>{faites}/{total} sous-tâches</>
+              )}
+            </p>
+          );
+        })()}
       </button>
       {enRetard && onRevenirPlanningAuto && onMarquerFait && (
         <div

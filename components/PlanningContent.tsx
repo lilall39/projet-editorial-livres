@@ -10,8 +10,17 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { getEtapeById } from "@/lib/data";
 import type { ProjetEditorial } from "@/types";
 
+/** Wrapper qui isole useSearchParams pour éviter l’erreur React #310 (hooks après suspend). */
 export function PlanningContent() {
   const searchParams = useSearchParams();
+  return <PlanningContentInner searchParams={searchParams} />;
+}
+
+interface PlanningContentInnerProps {
+  searchParams: ReturnType<typeof useSearchParams>;
+}
+
+function PlanningContentInner({ searchParams }: PlanningContentInnerProps) {
   const {
     projet,
     rappels,
