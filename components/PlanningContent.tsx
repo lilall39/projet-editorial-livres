@@ -125,7 +125,7 @@ function PlanningContentInner({ searchParams }: PlanningContentInnerProps) {
         className="hidden"
         onChange={onImportFile}
       />
-      <header className="border-b border-principal/20 bg-white shadow-sm">
+      <header className="border-b border-principal/20 bg-amber-50 shadow-sm">
         <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 sm:py-6">
           <Breadcrumb items={[{ label: "Planning" }]} />
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
