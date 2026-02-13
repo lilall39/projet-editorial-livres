@@ -38,7 +38,7 @@ export function SectionCard({
             <StatutBadge statut={etape.statut} enRetard={enRetard} compact />
           </span>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm font-bold text-gray-600">
           <span>Échéance : {formatDate(etape.deadline)}</span>
           <span className={j < 0 ? "font-medium text-alerte" : "text-gray-500"}>
             {j > 0 ? `J-${j}` : j < 0 ? `J+${Math.abs(j)}` : "J-0"}
@@ -57,7 +57,7 @@ export function SectionCard({
           const total = etape.sousTaches.length;
           const terminé = faites === total;
           return (
-            <p className={`mt-2 text-xs ${terminé ? "font-medium text-green-700" : "text-gray-500"}`}>
+            <p className={`mt-2 text-xs ${terminé ? "font-medium text-green-700" : "font-bold text-green-800"}`}>
               {terminé ? (
                 <>✔️ Terminé – {total}/{total} sous-tâches</>
               ) : (
